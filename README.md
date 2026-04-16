@@ -1,8 +1,10 @@
-# PaperSanta — PDF Service
-
+# PaperSanta 
+Đây là đồ án AI Research Assistant của nhóm Trí Tuệ Nhân Nhượng lớp 24TNT1 cho môn học Tư duy tính toán. 
+Hiện tại chỉ implement việc upload pdf chứ chưa có gì thêm
+P
 ## Cấu trúc project
 ```
-papersanta-pdf/
+papersanta/
 ├── main.py                    ← FastAPI entry point
 ├── requirements.txt
 ├── .env                       ← credentials (đừng commit)
