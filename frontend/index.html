@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PaperSanta — PDF Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:     #0a0a0f;
+  --surface:#12121a;
+  --card:   #1a1a26;
+  --border: #2a2a3d;
+  --accent: #7c6dfa;
+  --accent2:#fa6d9a;
+  --text:   #e8e8f0;
+  --muted:  #6b6b85;
+  --green:  #4ade80;
+  --red:    #f87171;
+  --mono:   'DM Mono', monospace;
+  --sans:   'Syne', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:grid;grid-template-columns:320px 1fr;grid-template-rows:64px 1fr;height:100vh;overflow:hidden}
+
+/* Header */
+header{grid-column:1/-1;display:flex;align-items:center;padding:0 28px;border-bottom:1px solid var(--border);gap:16px;background:var(--surface)}
+.logo{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+.logo span{color:var(--accent)}
+.tagline{font-size:11px;color:var(--muted);font-family:var(--mono);margin-left:auto}
+.health-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:.3s}
+.health-dot.ok{background:var(--green);box-shadow:0 0 8px var(--green)}
+
+/* Sidebar */
+aside{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-top{padding:20px}
+.sidebar-title{font-size:11px;letter-spacing:2px;color:var(--muted);font-family:var(--mono);margin-bottom:14px;text-transform:uppercase}
+
+/* Upload zone */
+.upload-zone{border:1.5px dashed var(--border);border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;transition:.2s;position:relative;background:var(--card)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(124,109,250,.05)}
+.upload-zone.drag{transform:scale(1.01)}
+.upload-icon{font-size:28px;margin-bottom:8px}
+.upload-zone p{font-size:12px;color:var(--muted);line-height:1.6;font-family:var(--mono)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.btn-upload{margin-top:14px;width:100%;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:var(--sans);font-weight:700;font-size:13px;cursor:pointer;transition:.15s;letter-spacing:.3px}
+.btn-upload:hover{background:#6b5de8;transform:translateY(-1px)}
+.btn-upload:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* Progress bar */
+.progress-wrap{margin-top:10px;height:3px;background:var(--border);border-radius:4px;overflow:hidden;display:none}
+.progress-wrap.show{display:block}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .3s;border-radius:4px}
+
+/* PDF list */
+.list-wrap{flex:1;overflow-y:auto;padding:0 12px 12px}
+.list-wrap::-webkit-scrollbar{width:4px}
+.list-wrap::-webkit-scrollbar-track{background:transparent}
+.list-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.pdf-item{display:flex;align-items:flex-start;gap:10px;padding:10px 10px;border-radius:10px;cursor:pointer;transition:.15s;margin-bottom:4px;border:1px solid transparent}
+.pdf-item:hover{background:var(--card);border-color:var(--border)}
+.pdf-item.active{background:rgba(124,109,250,.1);border-color:var(--accent)}
+.pdf-icon{width:32px;height:40px;background:var(--card);border:1px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--mono);color:var(--accent);flex-shrink:0;font-weight:500}
+.pdf-meta{flex:1;min-width:0}
+.pdf-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.pdf-info{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px}
+.pdf-status{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:20px;margin-top:4px}
+.pdf-status.pending{background:rgba(251,191,36,.1);color:#fbbf24}
+.pdf-status.extracted,.pdf-status.indexed{background:rgba(74,222,128,.1);color:var(--green)}
+.pdf-status.failed{background:rgba(248,113,113,.1);color:var(--red)}
+.btn-del{background:none;border:none;cursor:pointer;color:var(--muted);padding:2px 4px;border-radius:4px;font-size:14px;transition:.15s;flex-shrink:0;margin-top:2px}
+.btn-del:hover{color:var(--red);background:rgba(248,113,113,.1)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:12px;font-family:var(--mono);line-height:2}
+
+/* Main viewer */
+main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.viewer-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--surface);flex-shrink:0}
+.viewer-title{font-size:14px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.viewer-meta{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.viewer-body{flex:1;overflow:hidden;position:relative}
+.pdf-frame{width:100%;height:100%;border:none;background:#fff}
+.placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--muted)}
+.placeholder-icon{font-size:64px;opacity:.15}
+.placeholder h2{font-size:22px;font-weight:800;opacity:.3;letter-spacing:-1px}
+.placeholder p{font-size:12px;font-family:var(--mono);opacity:.4}
+
+/* Toast */
+.toast-wrap{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:999}
+.toast{padding:12px 18px;border-radius:10px;font-size:12px;font-family:var(--mono);animation:slideIn .2s ease;max-width:320px;display:flex;align-items:center;gap:8px}
+.toast.success{background:#1a2e1a;border:1px solid #2d5e2d;color:var(--green)}
+.toast.error{background:#2e1a1a;border:1px solid #5e2d2d;color:var(--red)}
+.toast.info{background:#1a1a2e;border:1px solid #2d2d5e;color:var(--accent)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.stats-bar{display:flex;gap:20px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.stat{font-size:10px;font-family:var(--mono);color:var(--muted)}
+.stat b{color:var(--text);font-weight:500}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Paper<span>Santa</span></div>
+  <div class="tagline">PDF Storage · RAG Pipeline</div>
+  <div class="health-dot" id="healthDot" title="API Status"></div>
+</header>
+
+<aside>
+  <div class="sidebar-top">
+    <div class="sidebar-title">Upload PDF</div>
+    <div class="upload-zone" id="dropZone">
+      <div class="upload-icon">📄</div>
+      <p>Kéo thả PDF vào đây<br/>hoặc click để chọn file</p>
+      <input type="file" id="fileInput" accept=".pdf" multiple/>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <button class="btn-upload" id="uploadBtn" disabled>Chọn file để upload</button>
+  </div>
+
+  <div class="sidebar-title" style="padding:0 20px;margin-bottom:8px">Thư viện PDF</div>
+  <div class="list-wrap" id="pdfList">
+    <div class="empty-state">Chưa có file nào<br/>Upload PDF để bắt đầu</div>
+  </div>
+</aside>
+
+<main>
+  <div class="stats-bar" id="statsBar">
+    <div class="stat">Tổng: <b id="statTotal">0</b> files</div>
+    <div class="stat">Kích thước: <b id="statSize">0 KB</b></div>
+    <div class="stat">API: <b id="statApi">—</b></div>
+  </div>
+  <div class="viewer-header" id="viewerHeader" style="display:none">
+    <div class="viewer-title" id="viewerTitle">—</div>
+    <div class="viewer-meta" id="viewerMeta"></div>
+    <button onclick="closeViewer()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:11px">✕ Đóng</button>
+  </div>
+  <div class="viewer-body">
+    <div class="placeholder" id="placeholder">
+      <div class="placeholder-icon">📑</div>
+      <h2>PaperSanta</h2>
+      <p>Chọn một PDF từ danh sách để xem</p>
+    </div>
+    <iframe class="pdf-frame" id="pdfFrame" style="display:none"></iframe>
+  </div>
+</main>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const API = 'http://localhost:8000';
+let selectedFile = null;
+let docs = [];
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function toast(msg, type='info', duration=3000) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => el.remove(), duration);
+}
+
+// ── Health check ──────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch(`${API}/health`);
+    const dot = document.getElementById('healthDot');
+    const statApi = document.getElementById('statApi');
+    if (r.ok) {
+      dot.className = 'health-dot ok';
+      statApi.textContent = 'Online';
+    } else throw new Error();
+  } catch {
+    document.getElementById('healthDot').className = 'health-dot';
+    document.getElementById('statApi').textContent = 'Offline';
+  }
+}
+
+// ── Load PDF list ─────────────────────────────────────────────────────────
+async function loadDocs() {
+  try {
+    const r = await fetch(`${API}/api/pdf/`);
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    docs = data.documents || [];
+    renderList();
+    updateStats(data.total, docs);
+  } catch {
+    toast('Không kết nối được API. Kiểm tra server đang chạy?', 'error', 5000);
+  }
+}
+
+function updateStats(total, items) {
+  document.getElementById('statTotal').textContent = total;
+  const totalBytes = items.reduce((s, d) => s + d.file_size, 0);
+  document.getElementById('statSize').textContent = formatSize(totalBytes);
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(2) + ' MB';
+}
+
+function renderList() {
+  const el = document.getElementById('pdfList');
+  if (!docs.length) {
+    el.innerHTML = '<div class="empty-state">Chưa có file nào<br/>Upload PDF để bắt đầu</div>';
+    return;
+  }
+  el.innerHTML = docs.map(doc => `
+    <div class="pdf-item" id="item-${doc.id}" onclick="viewPdf('${doc.id}', '${escHtml(doc.original_name)}', ${doc.page_count||0}, ${doc.file_size})">
+      <div class="pdf-icon">PDF</div>
+      <div class="pdf-meta">
+        <div class="pdf-name" title="${escHtml(doc.original_name)}">${escHtml(doc.original_name)}</div>
+        <div class="pdf-info">${formatSize(doc.file_size)} · ${doc.page_count ? doc.page_count+' trang' : 'N/A'} · ${timeAgo(doc.created_at)}</div>
+        <span class="pdf-status ${doc.status}">● ${doc.status}</span>
+      </div>
+      <button class="btn-del" onclick="event.stopPropagation();deletePdf('${doc.id}','${escHtml(doc.original_name)}')" title="Xóa">✕</button>
+    </div>
+  `).join('');
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function timeAgo(iso) {
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 60) return 'vừa xong';
+  if (diff < 3600) return Math.floor(diff/60) + ' phút trước';
+  if (diff < 86400) return Math.floor(diff/3600) + ' giờ trước';
+  return Math.floor(diff/86400) + ' ngày trước';
+}
+
+// ── View PDF ──────────────────────────────────────────────────────────────
+async function viewPdf(id, name, pages, size) {
+  document.querySelectorAll('.pdf-item').forEach(e => e.classList.remove('active'));
+  document.getElementById('item-'+id)?.classList.add('active');
+
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('pdfFrame').style.display = 'block';
+  document.getElementById('viewerHeader').style.display = 'flex';
+  document.getElementById('viewerTitle').textContent = name;
+  document.getElementById('viewerMeta').textContent =
+    (pages ? pages + ' trang · ' : '') + formatSize(size);
+
+  // Lấy URL trực tiếp từ Supabase thay vì redirect qua backend
+  try {
+    const r = await fetch(`${API}/api/pdf/${id}/file?redirect=false`);
+    const data = await r.json();
+    document.getElementById('pdfFrame').src = data.url;
+  } catch {
+    // Fallback về redirect nếu lỗi
+    document.getElementById('pdfFrame').src = `${API}/api/pdf/${id}/file`;
+  }
+}
+
+function closeViewer() {
+  document.getElementById('pdfFrame').src = '';
+  document.getElementById('pdfFrame').style.display = 'none';
+  document.getElementById('placeholder').style.display = 'flex';
+  document.getElementById('viewerHeader').style.display = 'none';
+  document.querySelectorAll('.pdf-item').forEach(e => e.classList.remove('active'));
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────
+async function deletePdf(id, name) {
+  if (!confirm(`Xóa "${name}"?`)) return;
+  try {
+    const r = await fetch(`${API}/api/pdf/${id}`, { method: 'DELETE' });
+    if (!r.ok) throw new Error((await r.json()).detail);
+    toast(`Đã xóa: ${name}`, 'success');
+    closeViewer();
+    await loadDocs();
+  } catch(e) {
+    toast('Xóa thất bại: ' + e.message, 'error');
+  }
+}
+
+// ── Upload ────────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+
+fileInput.addEventListener('change', e => {
+  const files = Array.from(e.target.files);
+  if (files.length) {
+    selectedFile = files[0];
+    uploadBtn.textContent = `Upload "${selectedFile.name}"`;
+    uploadBtn.disabled = false;
+  }
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.name.endsWith('.pdf')) {
+    selectedFile = file;
+    uploadBtn.textContent = `Upload "${file.name}"`;
+    uploadBtn.disabled = false;
+  } else {
+    toast('Chỉ chấp nhận file .pdf', 'error');
+  }
+});
+
+uploadBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  uploadBtn.disabled = true;
+  uploadBtn.textContent = 'Đang upload...';
+
+  const progress = document.getElementById('progressWrap');
+  const bar = document.getElementById('progressBar');
+  progress.classList.add('show');
+
+  // Animate progress
+  let pct = 0;
+  const interval = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 15, 85);
+    bar.style.width = pct + '%';
+  }, 100);
+
+  const fd = new FormData();
+  fd.append('file', selectedFile);
+
+  try {
+    const r = await fetch(`${API}/api/pdf/upload`, { method: 'POST', body: fd });
+    clearInterval(interval);
+    bar.style.width = '100%';
+
+    if (!r.ok) {
+      const err = await r.json();
+      throw new Error(err.detail || 'Upload thất bại');
+    }
+    const data = await r.json();
+    toast(`✓ Upload thành công: ${data.original_name}`, 'success');
+    await loadDocs();
+  } catch(e) {
+    clearInterval(interval);
+    toast('Upload lỗi: ' + e.message, 'error');
+  } finally {
+    setTimeout(() => {
+      progress.classList.remove('show');
+      bar.style.width = '0%';
+    }, 500);
+    selectedFile = null;
+    fileInput.value = '';
+    uploadBtn.textContent = 'Chọn file để upload';
+    uploadBtn.disabled = true;
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────
+checkHealth();
+loadDocs();
+setInterval(checkHealth, 30000);
+</script>
+</body>
+</html>
