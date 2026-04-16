@@ -1,7 +1,6 @@
 # PaperSanta 
 Đây là đồ án AI Research Assistant của nhóm Trí Tuệ Nhân Nhượng lớp 24TNT1 cho môn học Tư duy tính toán. 
 Hiện tại chỉ implement việc upload pdf chứ chưa có gì thêm
-P
 ## Cấu trúc project
 ```
 papersanta/
@@ -36,7 +35,7 @@ source .venv/bin/activate     # Mac/Linux
 # 2. Cài dependencies
 pip install -r requirements.txt
 
-# 3. Điền .env (đã có sẵn, chỉ cần update DB_PASSWORD)
+# 3. Copy file .env mà tao gửi trong notion vào để test
 
 # 4. Chạy server
 uvicorn main:app --reload --port 8000
