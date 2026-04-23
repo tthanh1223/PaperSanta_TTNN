@@ -8,3 +8,5 @@ aiofiles
 pypdf
 supabase
 python-dotenv
+npm
+node

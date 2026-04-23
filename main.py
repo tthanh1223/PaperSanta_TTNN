@@ -55,13 +55,18 @@ app.add_middleware(
 app.include_router(pdf_router)
 
 # Serve frontend static files
-frontend_path = Path("frontend")
-if frontend_path.exists():
-    app.mount("/static", StaticFiles(directory="frontend"), name="static")
+frontend_path = Path(__file__).resolve().parent / "frontend"
+frontend_dist = frontend_path / "dist"
+if frontend_dist.exists():
+    app.mount("/static", StaticFiles(directory=str(frontend_dist), html=True), name="static")
 
     @app.get("/", include_in_schema=False)
     async def serve_frontend():
-        return FileResponse("frontend/index.html")
+        return FileResponse(frontend_dist / "index.html")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        return FileResponse(frontend_dist / "index.html")
 
 
 # Health check
