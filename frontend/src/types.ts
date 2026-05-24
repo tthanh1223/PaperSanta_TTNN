@@ -36,6 +36,34 @@ export interface ChatSession {
   messages?: ChatMessage[];
 }
 
+export interface PaperSearchResult {
+  s2_id: string;
+  title: string;
+  abstract?: string | null;
+  year?: number | null;
+  authors: string[];
+  venue?: string | null;
+  citation_count: number;
+  open_access_pdf?: string | null;
+}
+
+export interface PaperSearchResponse {
+  total: number;
+  query: string;
+  papers: PaperSearchResult[];
+}
+
+export interface PaperDetailResponse extends PaperSearchResult {
+  reference_count: number;
+}
+
+export interface RelatedPapersResponse {
+  source_pdf_id: string;
+  extracted_topics: string[];
+  related_papers: PaperSearchResult[];
+  method: string;
+}
+
 export interface User {
   uid: string;
   displayName: string | null;

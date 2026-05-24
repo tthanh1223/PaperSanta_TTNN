@@ -173,7 +173,7 @@ function AppContent() {
               exit={{ opacity: 0, x: -20 }}
               className="h-full overflow-y-auto"
             >
-              <Discovery />
+              <Discovery papers={papers} token={token} />
             </motion.div>
           )}
         </AnimatePresence>
