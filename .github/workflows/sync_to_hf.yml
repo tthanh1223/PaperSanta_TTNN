@@ -1,0 +1,39 @@
+name: Sync to Hugging Face Space
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          lfs: false
+      - name: Push to HF
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          echo "---" > README.md
+          echo "title: Paper Search API" >> README.md
+          echo "emoji: 🚀" >> README.md
+          echo "colorFrom: blue" >> README.md
+          echo "colorTo: green" >> README.md
+          echo "sdk: docker" >> README.md
+          echo "pinned: false" >> README.md
+          echo "---" >> README.md
+          
+          rm -rf .git
+          git init
+          git branch -M main
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          git add -f README.md
+          git add .
+          
+          git commit -m "Force deploy with strict README"
+          
+          git push --force https://nguyenhoangynhi:${HF_TOKEN}@huggingface.co/spaces/nguyenhoangynhi/paper-search-api main

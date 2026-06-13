@@ -1,3 +1,11 @@
+---
+title: Paper Search API
+emoji: 🚀
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
 # PaperSanta
 
 > PaperSanta là một AI Research Assistant hỗ trợ đọc, lưu trữ, tìm kiếm và phân tích bài báo khoa học dạng PDF.
@@ -240,7 +248,6 @@ npm run dev
 ---
 
 ## Đóng góp (Contributing)
-
 ### Quy trình đóng góp
 
 1. **Fork** repository
