@@ -48,26 +48,26 @@ frontend/
 ## Layout
 
 ```
-┌──────── 296px ────────┐───────── flex: 1 ─────────┐
-│  Sidebar (#F7F8FA)    │  Main Content (white)      │
-│ ─────────────────────  │ ┌──────────────────────┐ │
-│  PAPERSANTA            │ │  WelcomeCard          │ │
-│  🔍 Search for files..  │ │  UploadZone           │ │
-│                        │ │  LibraryPanel         │ │
-│  ─── TOOLS ───        │ │  [paper cards]        │ │
-│  📚 Library (active)   │ │                       │ │
-│  💬 Chats              │ └──────────────────────┘ │
-│  🔬 Analyze            │                          │
-│  🔎 Search papers      │  Chat view (activeView): │
-│                        │  ┌────────────────────┐ │
+┌──────── 296px ────────┐───────── flex: 1 ────────┐
+│  Sidebar (#F7F8FA)    │  Main Content (white)    │
+│ ───────────────────── │ ┌──────────────────────┐ │
+│  PAPERSANTA           │ │  WelcomeCard         │ │
+│                       │ │  UploadZone          │ │
+│                       │ │  LibraryPanel        │ │
+│  ─── TOOLS ───        │ │  [paper cards]       │ │
+│     Library (active)  │ │                      │ │
+│     Chats             │ └──────────────────────┘ │
+│     Analyze           │                          │
+│     Search papers     │  Chat view (activeView): │
+│                       │  ┌─────────────────────┐ │
 │  ─── RECENT ───       │  │ Toolbar (PDF select)│ │
-│  ...recent PDFs...     │  │ [History] [+New]   │ │
-│                        │  ├────────────────────┤ │
-│  ┌─[+ Upload file]──┐ │  │ Session sidebar │ Msgs│
-│  └──────────────────┘ │  │ (240px)         │     │
-│  👤 User       [⇨]    │  ├────────────────────┤ │
-└────────────────────────┘  │ Input bar           │
-                            └────────────────────┘
+│  ...recent PDFs...    │  │ [History] [+New]    │ │
+│                       │  ├─────────────────────┤ │
+│  ┌─[+ Upload file]──┐ │  │ Session sidebar     │ │
+│  └──────────────────┘ │  │ (240px)             │ │
+│  👤 User       [⇨]   │  ├─────────────────────┤ │
+└───────────────────────┘  │ Input bar           | │
+                           └───────────────────────┘
 ```
 
 ## Routing (State-based)
